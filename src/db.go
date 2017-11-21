@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	debug    = flag.Bool("debug", false, "enable debugging")
+	debug    = flag.Bool("debug", true, "enable debugging")
 	dbuser   = flag.String("dbuser", "sa", "the database user")
 	password = flag.String("password", "c0y0te#22", "the database password")
 	port     = flag.Int("port", 1433, "the database port")
@@ -19,7 +19,7 @@ var (
 
 // SELECT (SELECT cntr_value * 100.00 FROM sys.dm_os_performance_counters WHERE counter_name = 'Buffer cache hit ratio') / (SELECT cntr_value FROM sys.dm_os_performance_counters WHERE counter_name = 'Buffer cache hit ratio base') AS BufferCacheHitRatio, (SELECT cntr_value FROM sys.dm_os_performance_counters WHERE counter_name = 'Page life expectancy' AND RTRIM([object_name]) LIKE '%:Buffer Manager') AS PageLife
 type memory struct {
-	buffercache int
+	buffercache float64
 	pagelife    int
 }
 
@@ -42,7 +42,8 @@ type fileio struct {
 }
 
 //Calldb test
-func Calldb() (Messages []fileio) {
+// func Calldb() (IOmetrics []fileio, MEMmetrics []memory) {
+func Calldb() (IOmetrics []fileio) {
 	flag.Parse()
 
 	if *debug {
@@ -95,7 +96,7 @@ func Calldb() (Messages []fileio) {
 		}
 		// fmt.Printf("***DatabaseName***: %s\n bytes: %d\n", dn, br)
 
-		s := fileio{
+		io := fileio{
 			dbname:       dn,
 			bytesread:    br,
 			byteswritten: bw,
@@ -104,15 +105,7 @@ func Calldb() (Messages []fileio) {
 			nWrites:      nw,
 		}
 
-		msg := fileio{
-			s.dbname,
-			s.bytesread,
-			s.byteswritten,
-			s.sizeinbytes,
-			s.nReads,
-			s.nWrites,
-		}
-		Messages = append(Messages, msg)
+		IOmetrics = append(IOmetrics, io)
 
 	}
 	if err := rows.Err(); err != nil {
@@ -121,6 +114,34 @@ func Calldb() (Messages []fileio) {
 
 	// rows, err := conn.Query("SELECT d.name AS DatabaseName, SUM(a.num_of_bytes_read) AS BytesRead FROM sys.databases d LEFT JOIN sys.dm_io_virtual_file_stats(NULL, NULL) a ON d.database_id = a.database_id GROUP BY d.name ORDER BY d.name")
 	// rows1, err := conn.Query("SELECT d.name AS DatabaseName, SUM(a.num_of_bytes_read) AS BytesRead, SUM(a.num_of_bytes_written) AS BytesWritten, SUM(a.size_on_disk_bytes)	AS SizeInBytes, SUM(a.num_of_reads)	AS NumberOfReads, SUM(a.num_of_writes) AS NumberOfWrites FROM sys.databases d LEFT JOIN sys.dm_io_virtual_file_stats(NULL, NULL) a ON d.database_id = a.database_id GROUP BY d.name ORDER BY d.name")
+
+	rows2, _ := conn.Query("SELECT (SELECT cntr_value * 100.00 FROM sys.dm_os_performance_counters WHERE counter_name = 'Buffer cache hit ratio') / (SELECT cntr_value FROM sys.dm_os_performance_counters WHERE counter_name = 'Buffer cache hit ratio base') AS BufferCacheHitRatio, (SELECT cntr_value FROM sys.dm_os_performance_counters WHERE counter_name = 'Page life expectancy' AND RTRIM([object_name]) LIKE '%:Buffer Manager') AS PageLife") // Note: Ignoring errors for brevity
+	// var name1 string
+
+	var bc float64
+	var pl int
+
+	for rows2.Next() {
+
+		if err := rows2.Scan(&bc, &pl); err != nil {
+			log.Fatal(err)
+		}
+		// fmt.Printf("***DatabaseName***: %s\n bytes: %d\n", dn, br)
+
+		mem := memory{
+			buffercache: bc,
+			pagelife:    pl,
+		}
+		var MEMmetrics []memory
+		MEMmetrics = append(MEMmetrics, mem)
+
+		// fmt.Println(mem.pagelife, "\n")
+		// fmt.Println(mem.buffercache)
+
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
 
 	defer conn.Close()
 

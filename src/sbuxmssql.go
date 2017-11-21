@@ -26,9 +26,14 @@ func populateInventory(inventory sdk.Inventory) error {
 }
 
 func populateMetrics(ms *metric.MetricSet) error {
-	// Ex: ms.SetMetric("requestsPerSecond", 10, metric.GAUGE)
 
-	var fileio = Calldb()
+	//OPEN Databse Connection
+	var db = DBconnect()
+
+	// SQL(db)
+	// Memory(db)
+	// IO Metrics
+	var fileio = IO(db)
 	for i := 0; i < len(fileio); i++ {
 		ms.SetMetric("BytesRead_"+fileio[i].dbname, fileio[i].bytesread, metric.GAUGE)
 		ms.SetMetric("BytesWritten_"+fileio[i].dbname, fileio[i].byteswritten, metric.GAUGE)
@@ -36,6 +41,14 @@ func populateMetrics(ms *metric.MetricSet) error {
 		ms.SetMetric("NumberReads_"+fileio[i].dbname, fileio[i].nReads, metric.GAUGE)
 		ms.SetMetric("NumberWrites_"+fileio[i].dbname, fileio[i].nWrites, metric.GAUGE)
 	}
+
+	// Memory Metrics
+	var mem = Memory(db)
+	ms.SetMetric("BufferCache", mem.buffercache, metric.GAUGE)
+	ms.SetMetric("PageLife", mem.pagelife, metric.GAUGE)
+
+	// CLOSE Databse Connection
+	defer db.Close()
 	return nil
 }
 
