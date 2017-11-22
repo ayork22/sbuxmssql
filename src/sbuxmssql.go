@@ -33,11 +33,10 @@ func populateMetrics(ms *metric.MetricSet) error {
 	fmt.Println("***BEFORE DBconnect***")
 	var db = DBconnect()
 	fmt.Println("***Database Connected***")
-	// SQL(db)
-	// Memory(db)
-	// IO Metrics
 
 	ms.SetMetric("NumberWrites_", 22, metric.GAUGE)
+
+	// IO Metrics
 	var fileio = IO(db)
 	fmt.Println("*********", fileio[0].dbname)
 	for i := 0; i < len(fileio); i++ {
@@ -47,13 +46,13 @@ func populateMetrics(ms *metric.MetricSet) error {
 		ms.SetMetric("NumberReads_"+fileio[i].dbname, fileio[i].nReads, metric.GAUGE)
 		ms.SetMetric("NumberWrites_"+fileio[i].dbname, fileio[i].nWrites, metric.GAUGE)
 	}
-
-	// Memory Metrics
+	//
+	// // Memory Metrics
 	var mem = Memory(db)
 	ms.SetMetric("BufferCache", mem.buffercache, metric.GAUGE)
 	ms.SetMetric("PageLife", mem.pagelife, metric.GAUGE)
 
-	// Connections Metrics
+	// // Connections Metrics
 	var connects = Connections(db)
 	for i := 0; i < len(connects); i++ {
 		ms.SetMetric("NumberConnections_"+connects[i].dbname, connects[i].nConnections, metric.GAUGE)
