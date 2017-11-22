@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/infra-integrations-sdk/metric"
@@ -28,12 +30,16 @@ func populateInventory(inventory sdk.Inventory) error {
 func populateMetrics(ms *metric.MetricSet) error {
 
 	//OPEN Databse Connection
+	fmt.Println("***BEFORE DBconnect***")
 	var db = DBconnect()
-
+	fmt.Println("***Database Connected***")
 	// SQL(db)
 	// Memory(db)
 	// IO Metrics
+
+	ms.SetMetric("NumberWrites_", 22, metric.GAUGE)
 	var fileio = IO(db)
+	fmt.Println("*********", fileio[0].dbname)
 	for i := 0; i < len(fileio); i++ {
 		ms.SetMetric("BytesRead_"+fileio[i].dbname, fileio[i].bytesread, metric.GAUGE)
 		ms.SetMetric("BytesWritten_"+fileio[i].dbname, fileio[i].byteswritten, metric.GAUGE)
@@ -47,6 +53,14 @@ func populateMetrics(ms *metric.MetricSet) error {
 	ms.SetMetric("BufferCache", mem.buffercache, metric.GAUGE)
 	ms.SetMetric("PageLife", mem.pagelife, metric.GAUGE)
 
+	// Connections Metrics
+	var connects = Connections(db)
+	for i := 0; i < len(connects); i++ {
+		ms.SetMetric("NumberConnections_"+connects[i].dbname, connects[i].nConnections, metric.GAUGE)
+		ms.SetMetric("NumberReadsConnections_"+connects[i].dbname, connects[i].nReads, metric.GAUGE)
+		ms.SetMetric("NumberWritesConnections_"+connects[i].dbname, connects[i].nWrites, metric.GAUGE)
+	}
+
 	// CLOSE Databse Connection
 	defer db.Close()
 	return nil
@@ -55,6 +69,8 @@ func populateMetrics(ms *metric.MetricSet) error {
 func main() {
 	integration, err := sdk.NewIntegration(integrationName, integrationVersion, &args)
 	fatalIfErr(err)
+
+	fmt.Println("***PLUGIN STARTED***")
 
 	if args.All || args.Inventory {
 		fatalIfErr(populateInventory(integration.Inventory))
