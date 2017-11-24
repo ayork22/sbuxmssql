@@ -34,11 +34,8 @@ func populateMetrics(ms *metric.MetricSet) error {
 	var db = DBconnect()
 	fmt.Println("***Database Connected***")
 
-	ms.SetMetric("NumberWrites_", 22, metric.GAUGE)
-
 	// IO Metrics
 	var fileio = IO(db)
-	fmt.Println("*********", fileio[0].dbname)
 	for i := 0; i < len(fileio); i++ {
 		ms.SetMetric("BytesRead_"+fileio[i].dbname, fileio[i].bytesread, metric.GAUGE)
 		ms.SetMetric("BytesWritten_"+fileio[i].dbname, fileio[i].byteswritten, metric.GAUGE)
