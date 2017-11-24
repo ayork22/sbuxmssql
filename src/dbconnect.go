@@ -10,26 +10,26 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
-var (
-	debug         = flag.Bool("debug", true, "enable debugging")
-	password      = flag.String("password", "test", "the database password")
-	port     *int = flag.Int("port", 1433, "the database port")
-	server        = flag.String("server", "DESKTOP-J0L7P9N\\SQLEXPRESS", "the database server")
-	dbuser        = flag.String("dbuser", "test", "the database user")
-)
-
 // var (
 // 	debug         = flag.Bool("debug", true, "enable debugging")
-// 	password      = flag.String("password", "c0y0te#22", "the database password")
+// 	password      = flag.String("password", "test", "the database password")
 // 	port     *int = flag.Int("port", 1433, "the database port")
-// 	server        = flag.String("server", "localhost", "the database server")
-// 	dbuser        = flag.String("dbuser", "sa", "the database user")
+// 	server        = flag.String("server", "DESKTOP-J0L7P9N\\SQLEXPRESS", "the database server")
+// 	dbuser        = flag.String("dbuser", "test", "the database user")
 // )
+
+var (
+	debug         = flag.Bool("debug", true, "enable debugging")
+	password      = flag.String("password", "c0y0te#22", "the database password")
+	port     *int = flag.Int("port", 1433, "the database port")
+	server        = flag.String("server", "localhost", "the database server")
+	dbuser        = flag.String("dbuser", "sa", "the database user")
+)
 
 var conn *sql.DB
 
 //WinConnect
-func DBconnect() (conn *sql.DB) {
+func DBconnect(du, dp string) (conn *sql.DB) {
 	flag.Parse()
 
 	if *debug {
@@ -47,7 +47,7 @@ func DBconnect() (conn *sql.DB) {
 	hostname = hostname + "\\SQLEXPRESS"
 	fmt.Println("OS Hostname:", hostname)
 
-	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d", hostname, *dbuser, *password, *port)
+	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d", hostname, du, dp, *port)
 	if *debug {
 		fmt.Printf(" connString:%s\n", connString)
 	}

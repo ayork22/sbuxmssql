@@ -11,6 +11,8 @@ import (
 
 type argumentList struct {
 	sdkArgs.DefaultArgumentList
+	Duser string `default:"sa" help:"File location to monitor"`
+	Dpass string `default:"c0y0te#22" help:"File name being monitored"`
 }
 
 const (
@@ -30,8 +32,10 @@ func populateInventory(inventory sdk.Inventory) error {
 func populateMetrics(ms *metric.MetricSet) error {
 
 	//OPEN Databse Connection
+	fmt.Println("***DUser***", args.Duser)
+	fmt.Println("***DPass***", args.Dpass)
 	fmt.Println("***BEFORE DBconnect***")
-	var db = DBconnect()
+	var db = DBconnect(args.Duser, args.Dpass)
 	fmt.Println("***Database Connected***")
 
 	// IO Metrics
