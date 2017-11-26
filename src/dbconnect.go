@@ -55,8 +55,6 @@ func DBconnect(du, dp string) (conn *sql.DB) {
 	if err != nil {
 		log.Fatal("Open connection failed:", err.Error())
 	}
-	// defer conn.Close()
-	// defer stmt.Close()
 
 	return
 }

@@ -11,8 +11,8 @@ import (
 
 type argumentList struct {
 	sdkArgs.DefaultArgumentList
-	Duser string `default:"sa" help:"File location to monitor"`
-	Dpass string `default:"c0y0te#22" help:"File name being monitored"`
+	Duser string `default:"test" help:"File location to monitor"`
+	Dpass string `default:"test" help:"File name being monitored"`
 }
 
 const (
@@ -41,6 +41,10 @@ func populateMetrics(ms *metric.MetricSet) error {
 	// IO Metrics
 	var fileio = IO(db)
 	for i := 0; i < len(fileio); i++ {
+
+		// *****TESTING*****
+		// ms.SetMetric("DatabaseName", fileio[i].dbname, metric.ATTRIBUTE)
+		// *****TESTING*****
 		ms.SetMetric("BytesRead_"+fileio[i].dbname, fileio[i].bytesread, metric.GAUGE)
 		ms.SetMetric("BytesWritten_"+fileio[i].dbname, fileio[i].byteswritten, metric.GAUGE)
 		ms.SetMetric("SizeInBytes_"+fileio[i].dbname, fileio[i].sizeinbytes, metric.GAUGE)
