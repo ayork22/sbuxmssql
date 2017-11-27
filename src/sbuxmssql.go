@@ -13,7 +13,7 @@ type argumentList struct {
 	sdkArgs.DefaultArgumentList
 	Duser   string `default:"test" help:"Database UserName"`
 	Dpass   string `default:"test" help:"Database Password"`
-	Dserver string `default:"\\SQLEXPRESS" help:"Database Server Name"`
+	Dserver string `default:"SQLEXPRESS" help:"Database Server Name"`
 }
 
 const (
@@ -30,39 +30,71 @@ func populateInventory(inventory sdk.Inventory) error {
 	return nil
 }
 
-func populateMetrics(ms *metric.MetricSet) error {
+// func populateMetrics(ms *metric.MetricSet) error {
+// Instead of just creating 1 new Metric Set I'm creating a new MetricSet for each Row I loop through
+func populateMetrics(integration *sdk.Integration) error {
 
 	//OPEN Databse Connection
 	fmt.Println("***DUser***", args.Duser)
 	fmt.Println("***DPass***", args.Dpass)
 	fmt.Println("***BEFORE DBconnect***")
-	var db = DBconnect(args.Duser, args.Dpass, args.Dserver)
+	var db = DBconnect(args.Duser, args.Dpass, "\\"+args.Dserver)
 	fmt.Println("***Database Connected***")
+
+	//OS PERF
+
+	var osPerf = OSperf(db)
+	for i := 0; i < len(osPerf); i++ {
+		ms := integration.NewMetricSet("OSperfTest")
+		setMertric(ms, "ObjectName", osPerf[i].object, metric.ATTRIBUTE)
+		setMertric(ms, "CounterName", osPerf[i].counter, metric.ATTRIBUTE)
+		setMertric(ms, "DBName", osPerf[i].instance, metric.ATTRIBUTE)
+		setMertric(ms, "Value", osPerf[i].value, metric.GAUGE)
+
+		// setMertric(ms, "NumberReads", fileio[i].nReads, metric.GAUGE)
+		// setMertric(ms, "NumberWrites", fileio[i].nWrites, metric.GAUGE)
+	}
 
 	// IO Metrics
 	var fileio = IO(db)
 	for i := 0; i < len(fileio); i++ {
-
+		ms := integration.NewMetricSet("MSSQL")
+		setMertric(ms, "DatabaseName", fileio[i].dbname, metric.ATTRIBUTE)
+		setMertric(ms, "BytesRead", fileio[i].bytesread, metric.GAUGE)
+		setMertric(ms, "BytesWritten", fileio[i].byteswritten, metric.GAUGE)
+		setMertric(ms, "SizeInBytes", fileio[i].sizeinbytes, metric.GAUGE)
+		setMertric(ms, "NumberReads", fileio[i].nReads, metric.GAUGE)
+		setMertric(ms, "NumberWrites", fileio[i].nWrites, metric.GAUGE)
 		// ****TESTING*****
-		ms.SetMetric("DatabaseName", fileio[i].dbname, metric.ATTRIBUTE)
-		ms.SetMetric("BytesRead_"+fileio[i].dbname, fileio[i].bytesread, metric.GAUGE)
-		ms.SetMetric("BytesWritten_"+fileio[i].dbname, fileio[i].byteswritten, metric.GAUGE)
-		ms.SetMetric("SizeInBytes_"+fileio[i].dbname, fileio[i].sizeinbytes, metric.GAUGE)
-		ms.SetMetric("NumberReads_"+fileio[i].dbname, fileio[i].nReads, metric.GAUGE)
-		ms.SetMetric("NumberWrites_"+fileio[i].dbname, fileio[i].nWrites, metric.GAUGE)
+		// ms.SetMetric("DatabaseName", fileio[i].dbname, metric.ATTRIBUTE)
+		// ms.SetMetric("BytesRead_", fileio[i].bytesread, metric.GAUGE)
+		// ms.SetMetric("BytesWritten_", fileio[i].byteswritten, metric.GAUGE)
+		// ms.SetMetric("SizeInBytes_", fileio[i].sizeinbytes, metric.GAUGE)
+		// ms.SetMetric("NumberReads_", fileio[i].nReads, metric.GAUGE)
+		// ms.SetMetric("NumberWrites_", fileio[i].nWrites, metric.GAUGE)
 	}
 	//
 	// // Memory Metrics
 	var mem = Memory(db)
-	ms.SetMetric("BufferCache", mem.buffercache, metric.GAUGE)
-	ms.SetMetric("PageLife", mem.pagelife, metric.GAUGE)
+	ms := integration.NewMetricSet("MSSQL")
+	setMertric(ms, "BufferCache", mem.buffercache, metric.GAUGE)
+	setMertric(ms, "PageLife", mem.pagelife, metric.GAUGE)
+	// ms.SetMetric("BufferCache", mem.buffercache, metric.GAUGE)
+	// ms.SetMetric("PageLife", mem.pagelife, metric.GAUGE)
 
 	// // Connections Metrics
 	var connects = Connections(db)
 	for i := 0; i < len(connects); i++ {
-		ms.SetMetric("NumberConnections_"+connects[i].dbname, connects[i].nConnections, metric.GAUGE)
-		ms.SetMetric("NumberReadsConnections_"+connects[i].dbname, connects[i].nReads, metric.GAUGE)
-		ms.SetMetric("NumberWritesConnections_"+connects[i].dbname, connects[i].nWrites, metric.GAUGE)
+		ms := integration.NewMetricSet("MSSQL")
+		setMertric(ms, "DatabaseName", connects[i].dbname, metric.ATTRIBUTE)
+		setMertric(ms, "NumberConnections", connects[i].nConnections, metric.GAUGE)
+		setMertric(ms, "NumberReadsConnections", connects[i].nReads, metric.GAUGE)
+		setMertric(ms, "NumberWritesConnections", connects[i].nWrites, metric.GAUGE)
+
+		// ms.SetMetric("DatabaseName", connects[i].dbname, metric.ATTRIBUTE)
+		// ms.SetMetric("NumberConnections", connects[i].nConnections, metric.GAUGE)
+		// ms.SetMetric("NumberReadsConnections", connects[i].nReads, metric.GAUGE)
+		// ms.SetMetric("NumberWritesConnections", connects[i].nWrites, metric.GAUGE)
 	}
 
 	// CLOSE Databse Connection
@@ -81,8 +113,8 @@ func main() {
 	}
 
 	if args.All || args.Metrics {
-		ms := integration.NewMetricSet("MSSQL")
-		fatalIfErr(populateMetrics(ms))
+		// ms := integration.NewMetricSet("MSSQL")
+		fatalIfErr(populateMetrics(integration))
 	}
 	fatalIfErr(integration.Publish())
 }
@@ -91,4 +123,12 @@ func fatalIfErr(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func setMertric(metricSet *metric.MetricSet, name string, value interface{}, sourceType metric.SourceType) error {
+	err := metricSet.SetMetric(name, value, sourceType)
+	if err != nil {
+		log.Warn("Failed setting value. name=%s  value=%s Error= %s", name, value, err)
+	}
+	return err
 }
