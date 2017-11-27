@@ -11,8 +11,9 @@ import (
 
 type argumentList struct {
 	sdkArgs.DefaultArgumentList
-	Duser string `default:"test" help:"File location to monitor"`
-	Dpass string `default:"test" help:"File name being monitored"`
+	Duser   string `default:"test" help:"Database UserName"`
+	Dpass   string `default:"test" help:"Database Password"`
+	Dserver string `default:"\\SQLEXPRESS" help:"Database Server Name"`
 }
 
 const (
@@ -35,16 +36,15 @@ func populateMetrics(ms *metric.MetricSet) error {
 	fmt.Println("***DUser***", args.Duser)
 	fmt.Println("***DPass***", args.Dpass)
 	fmt.Println("***BEFORE DBconnect***")
-	var db = DBconnect(args.Duser, args.Dpass)
+	var db = DBconnect(args.Duser, args.Dpass, args.Dserver)
 	fmt.Println("***Database Connected***")
 
 	// IO Metrics
 	var fileio = IO(db)
 	for i := 0; i < len(fileio); i++ {
 
-		// *****TESTING*****
-		// ms.SetMetric("DatabaseName", fileio[i].dbname, metric.ATTRIBUTE)
-		// *****TESTING*****
+		// ****TESTING*****
+		ms.SetMetric("DatabaseName", fileio[i].dbname, metric.ATTRIBUTE)
 		ms.SetMetric("BytesRead_"+fileio[i].dbname, fileio[i].bytesread, metric.GAUGE)
 		ms.SetMetric("BytesWritten_"+fileio[i].dbname, fileio[i].byteswritten, metric.GAUGE)
 		ms.SetMetric("SizeInBytes_"+fileio[i].dbname, fileio[i].sizeinbytes, metric.GAUGE)

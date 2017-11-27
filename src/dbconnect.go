@@ -29,7 +29,7 @@ var (
 var conn *sql.DB
 
 //WinConnect
-func DBconnect(du, dp string) (conn *sql.DB) {
+func DBconnect(du, dp, dserver string) (conn *sql.DB) {
 	flag.Parse()
 
 	if *debug {
@@ -44,7 +44,7 @@ func DBconnect(du, dp string) (conn *sql.DB) {
 		panic(err)
 	}
 	// Windows the DB Server name is needed as well
-	hostname = hostname + "\\SQLEXPRESS"
+	hostname = hostname + dserver
 	fmt.Println("OS Hostname:", hostname)
 
 	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d", hostname, du, dp, *port)
