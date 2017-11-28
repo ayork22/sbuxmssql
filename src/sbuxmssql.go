@@ -42,18 +42,18 @@ func populateMetrics(integration *sdk.Integration) error {
 	fmt.Println("***Database Connected***")
 
 	//OS PERF
-
-	var osPerf = OSperf(db)
-	for i := 0; i < len(osPerf); i++ {
-		ms := integration.NewMetricSet("OSperfTest")
-		setMertric(ms, "ObjectName", osPerf[i].object, metric.ATTRIBUTE)
-		setMertric(ms, "CounterName", osPerf[i].counter, metric.ATTRIBUTE)
-		setMertric(ms, "DBName", osPerf[i].instance, metric.ATTRIBUTE)
-		setMertric(ms, "Value", osPerf[i].value, metric.GAUGE)
-
-		// setMertric(ms, "NumberReads", fileio[i].nReads, metric.GAUGE)
-		// setMertric(ms, "NumberWrites", fileio[i].nWrites, metric.GAUGE)
-	}
+	OSperf(db, integration)
+	// var osPerf = OSperf(db, integration)
+	// for i := 0; i < len(osPerf); i++ {
+	// 	ms := integration.NewMetricSet("OSperfTest")
+	// 	setMertric(ms, "ObjectName", osPerf[i].object, metric.GAUGE)
+	// 	setMertric(ms, "CounterName", osPerf[i].counter, metric.GAUGE)
+	// 	setMertric(ms, "DBName", osPerf[i].instance, metric.GAUGE)
+	// 	setMertric(ms, "Value", osPerf[i].value, metric.GAUGE)
+	//
+	// 	// setMertric(ms, "NumberReads", fileio[i].nReads, metric.GAUGE)
+	// 	// setMertric(ms, "NumberWrites", fileio[i].nWrites, metric.GAUGE)
+	// }
 
 	// IO Metrics
 	var fileio = IO(db)
@@ -66,7 +66,7 @@ func populateMetrics(integration *sdk.Integration) error {
 		setMertric(ms, "NumberReads", fileio[i].nReads, metric.GAUGE)
 		setMertric(ms, "NumberWrites", fileio[i].nWrites, metric.GAUGE)
 		// ****TESTING*****
-		// ms.SetMetric("DatabaseName", fileio[i].dbname, metric.ATTRIBUTE)
+		// ms.SetMetric("DatabaseName", fileio[i].dbname, metric.GAUGE)
 		// ms.SetMetric("BytesRead_", fileio[i].bytesread, metric.GAUGE)
 		// ms.SetMetric("BytesWritten_", fileio[i].byteswritten, metric.GAUGE)
 		// ms.SetMetric("SizeInBytes_", fileio[i].sizeinbytes, metric.GAUGE)
@@ -91,7 +91,7 @@ func populateMetrics(integration *sdk.Integration) error {
 		setMertric(ms, "NumberReadsConnections", connects[i].nReads, metric.GAUGE)
 		setMertric(ms, "NumberWritesConnections", connects[i].nWrites, metric.GAUGE)
 
-		// ms.SetMetric("DatabaseName", connects[i].dbname, metric.ATTRIBUTE)
+		// ms.SetMetric("DatabaseName", connects[i].dbname, metric.GAUGE)
 		// ms.SetMetric("NumberConnections", connects[i].nConnections, metric.GAUGE)
 		// ms.SetMetric("NumberReadsConnections", connects[i].nReads, metric.GAUGE)
 		// ms.SetMetric("NumberWritesConnections", connects[i].nWrites, metric.GAUGE)
