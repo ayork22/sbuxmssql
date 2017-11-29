@@ -11,8 +11,8 @@ import (
 
 type argumentList struct {
 	sdkArgs.DefaultArgumentList
-	Duser   string `default:"test" help:"Database UserName"`
-	Dpass   string `default:"test" help:"Database Password"`
+	Duser   string `default:"sa" help:"Database UserName"`
+	Dpass   string `default:"c0y0te#22" help:"Database Password"`
 	Dserver string `default:"SQLEXPRESS" help:"Database Server Name"`
 }
 

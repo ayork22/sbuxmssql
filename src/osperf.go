@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -28,6 +29,13 @@ func standardizeSpaces(s string) string {
 //IO()
 func OSperf(conn *sql.DB, test *sdk.Integration) {
 
+	f, err := os.OpenFile("C:\\Users\\ayork\\Desktop\\test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		fmt.Printf("error opening file: %v", err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
 	rows, _ := conn.Query("SELECT object_name, counter_name, instance_name, cntr_value  FROM sys.dm_os_performance_counters;") // Note: Ignoring errors for brevity
 	defer rows.Close()
 	var ob string
@@ -48,8 +56,11 @@ func OSperf(conn *sql.DB, test *sdk.Integration) {
 		// instanLine := (standardizeSpaces(instan))
 		valLine := val
 
-		if strings.Contains(coun, "Buffer cache hit ratio base") {
+		if counLine == "Buffer cache hit ratio" {
 			fmt.Println("Buffer cache hit ratio= ", val)
+			setMertric(ms, counLine, valLine, metric.GAUGE)
+		} else if counLine == "Buffer cache hit ratio base" {
+			fmt.Println("Buffer cache hit ratio base= ", val)
 			setMertric(ms, counLine, valLine, metric.GAUGE)
 		} else if strings.Contains(coun, "Page life expectancy") {
 			fmt.Println("Page life expectancy= ", val)

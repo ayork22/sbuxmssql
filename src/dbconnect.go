@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -26,7 +25,7 @@ var (
 	dbuser        = flag.String("dbuser", "sa", "the database user")
 )
 
-var conn *sql.DB
+// var conn *sql.DB
 
 //WinConnect
 func DBconnect(du, dp, dserver string) (conn *sql.DB) {
@@ -44,17 +43,44 @@ func DBconnect(du, dp, dserver string) (conn *sql.DB) {
 		panic(err)
 	}
 	// Windows the DB Server name is needed as well
-	hostname = hostname + dserver
+	// hostname = hostname + dserver
 	fmt.Println("OS Hostname:", hostname)
 
 	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d", hostname, du, dp, *port)
 	if *debug {
-		fmt.Printf(" connString:%s\n", connString)
+		fmt.Printf("connString:%s\n", connString)
 	}
 	conn, err = sql.Open("mssql", connString)
+	// if err != nil {
+	// 	log.Fatal("Open connection failed:", err.Error())
+	// }
+
 	if err != nil {
-		log.Fatal("Open connection failed:", err.Error())
+		fmt.Println("TEST", err)
+		os.Exit(1)
 	}
+
+	err = conn.Ping()
+
+	if err != nil {
+		fmt.Println("Can't Connect", err)
+		os.Exit(1)
+	}
+
+	// if no error. Ping is successful
+	fmt.Println("Ping to database successful, connection is still alive")
+	// conn.Close()
+
+	// this part should fail
+
+	err = conn.Ping()
+
+	if err != nil {
+		fmt.Println("ErrorMessage: ", err)
+		os.Exit(1)
+	}
+	// if no error. Ping is successful
+	fmt.Println("Ping to database successful, connection is still alive")
 
 	return
 }
